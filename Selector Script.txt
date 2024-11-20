@@ -57,7 +57,7 @@ function create_UI()
     local assets = {
         {
             name="header-background",
-            url="https://raw.githubusercontent.com/MNSpitzer/Villainous/57489f56a51bf0f99407cdf029b296c004e18c2f/Parchment.png/"
+            url="https://raw.githubusercontent.com/MNSpitzer/Villainous/21499918902ce2cb0741d6dceba159480187b39a/Parchment_Borderless.png"
         },
     }
     local toggles = {}
