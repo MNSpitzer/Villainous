@@ -5,7 +5,7 @@ function onLoad()
 end
 
 SELECTED = ""
-URL = "https://raw.githubusercontent.com/MNSpitzer/Villainous/c9421aa40b3b03fb5dfe7e51c6ff81c77b155467/PirateVillainous.ttslua"
+URL = "https://raw.githubusercontent.com/MNSpitzer/Villainous/1430e5c320e5b28283bf73f806fd383cd7b7e20b/PirateVillainous.ttslua"
 EVERYTHING = {}
 -- #include villainsv6
 
