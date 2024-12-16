@@ -5,7 +5,7 @@ function onLoad()
 end
 
 SELECTED = ""
-URL = "https://raw.githubusercontent.com/MNSpitzer/Villainous/6167921af45af314bc8b6a61393fc48bc5107d89/PirateVillainous.ttslua"
+URL = "https://raw.githubusercontent.com/MNSpitzer/Villainous/d6a427cec4109e824e2ec865002790c2b2513b25/PirateVillainous.ttslua"
 EVERYTHING = {}
 -- #include villainsv6
 
@@ -16,7 +16,7 @@ function create_buttons()
     table.insert(buttons, {click_function = "INSERT_FUNCTION", function_owner = self, label = "Data URL:", position = {-1.4, 0.100000001490116, -0.85}, scale = {0.5, 0.5, 0.5}, width = 0, height = 0, tooltip = "Data URL", alignment = 3})
     table.insert(buttons, {click_function = "nil", function_owner = self, label = "Choose Subsection", position = {-0.9, 0.1, -0.5}, scale = {0.5, 0.5, 0.5}, width = 0, height = 0, alignment = 3})
     table.insert(buttons, {click_function = "get_data", function_owner = self, label = "Get Data", position = {1.3, 0.100000001490116, -0.850000023841858}, scale = {0.5, 0.5, 0.5}, width = 500, color = {0.856, 0.1, 0.094, 1}, alignment = 3, tooltip="OVERWRITES EVERYTHING"})
-    table.insert(buttons, {click_function = "publish_everything", function_owner = self, label = "Create factions save", position = {0.7, 0.100000001490116, 0.65}, scale = {0.5, 0.5, 0.5}, width = 1000, tooltip = "Save all current loaded data to the NotePad", alignment = 3, color=Color.green})
+    table.insert(buttons, {click_function = "publish_everything", function_owner = self, label = "Create factions save", position = {0.7, 0.100000001490116, 0.65}, scale = {0.5, 0.5, 0.5}, width = 1000, tooltip = "Save all current loaded data to the web", alignment = 3, color=Color.green})
     local counter = 0
     for section, component in pairs(EVERYTHING) do
         _G["click_"..section] = function() load_section(section) end
@@ -165,37 +165,53 @@ function onChat()
 end
 
 function publish_everything()
+    self.editInput({index=1, value="", color=Color.red})
     save_boards()
-
     local body = "EVERYTHING = {}\n"
     for section, factions in pairs(EVERYTHING) do
-        body = body .. "EVERYTHING['" .. section .. "'] = {}\n"
+        body = body.."EVERYTHING['"..section.."'] = {}\n"
         for faction, info in pairs(factions) do
-            body = body .. "EVERYTHING['" .. section .. "']['" .. faction .. "'] = {image='" .. info.image .. "', tooltip='" .. info.tooltip .. "', data={\n"
-            for _, ob in ipairs(info.data) do
-                body = body .. "{move_to=" .. Vector(ob.move_to):string() .. ", "
-                body = body .. "json=[[" .. ob.json .. "]]},"
+            body = body.."EVERYTHING['"..section.."']['"..faction.."'] = {image='"..info.image.."', tooltip='"..info.tooltip.."', data={\n"
+            for _,ob in ipairs(info.data) do
+                body = body.."{move_to="..Vector(ob.move_to):string()..", "
+                body = body.."json=[["..ob.json.."]]},"
             end
-            body = body .. "}}\n"
+            body = body.."}}\n"
         end
-        body = body .. "\n"
+        body = body.."\n"
     end
 
-    -- Split body into chunks of 10,000 characters (arbitrary safe limit)
-    local maxChunkSize = 10000
-    local index = 1
-    while #body > 0 do
-        local chunk = body:sub(1, maxChunkSize)
-        Notes.addNotebookTab({
-            title = "Data Part " .. index,
-            body = chunk
-        })
-        body = body:sub(maxChunkSize + 1)
-        index = index + 1
-    end
-
-    self.editInput({index=1, value="Data written to notebook!", color=Color.green})
-    print("Data successfully written to the notebook in " .. (index - 1) .. " parts.")
+    -- function callback(wr)
+    --   print("callback")
+    --     if wr.is_error then
+    --       print("error")
+    --       print(wr.url)
+    --       print(wr.error)
+    --       print(wr.response_code)
+    --     else
+    --       print("success")
+    --       print(wr.url)
+    --       print(wr.text)
+    --       local result = JSON.decode(wr.text)
+    --       print(result.url)
+    --       self.editInput({index=1, value=result.url, color=Color.green})
+    --     end
+    -- end
+    -- local headers = {["Content-Type"] = "application/json"}
+    -- local data = JSON.encode({files=files, language="lua", public=true, title="Villainous"})
+    -- print(logString(data))
+    -- local w = WebRequest.custom("https://glot.io/api/snippets", "POST", true, data, headers, callback)
+    -- for _, note in ipairs(Notes.getNotebookTabs()) do
+    --   Notes.removeNotebookTab(note.index)
+    -- end
+    -- for _, file in ipairs(files) do
+    --   Notes.addNotebookTab({
+    --     title = file.name,
+    --     body  = file.content
+    --   })
+    -- end
+    print(body)
+    self.editInput({index=1, value="Check print log", color=Color.green})
 end
 
 ----#include villainous/villainsaverconfigv2
