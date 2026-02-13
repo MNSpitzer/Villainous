@@ -1,0 +1,178 @@
+----#include villainous/customselectorv1
+function change_section(player, value, id)
+    self.UI.setAttribute(id.." Villains", "active", value)
+end
+
+function select_villain(player, value, id)
+    switchCharacter(self.UI.getAttribute(id, "section"), id, player.color)
+end
+
+function random_villain(player, value, id)
+    local chosen = ALL_VILLAINS[math.random(1, #ALL_VILLAINS)]
+    switchCharacter(chosen[1], chosen[2], player.color)
+end
+
+function getChar(section, char)
+    local objects = {}
+    if EVERYTHING[section][char] ~= nil then
+        objects=EVERYTHING[section][char].data
+    end
+    if #objects==0 then
+        print("Character not found")
+    end
+    return objects
+end
+
+function switchCharacter(section, character, color)
+    local my_rot = self.getRotation()
+    local objects = getChar(section, character)
+    local scale = self.getScale()
+	local p_name = Player[color].steam_name
+	local color_hex = Color.fromString(color):toHex(false) 
+    scale.x = 1/scale.x
+    scale.z = 1/scale.z
+
+    self.destruct()
+    function callback(o)
+        o.setRotation({o.getRotation().x, o.getRotation().y+my_rot.y, o.getRotation().z})
+		if o.type == "Deck" then
+			o.setDescription("[" .. color_hex .. "]" .. p_name .. "[-]" .. "'s deck")
+			local data = o.getData()
+			for _, card in ipairs(data.ContainedObjects) do
+				card.Description = "[" .. color_hex .. "]" .. p_name .. "[-]" .. "'s card"
+			end
+			o.destruct()
+			spawnObjectData({ data = data })
+			end
+    end
+    for _,v in ipairs(objects) do
+        local new_pos = self.positionToWorld(Vector(v.move_to) * scale)
+        spawnObjectJSON({
+            json              = v.json,
+            position          = new_pos,
+            callback_function = callback
+        })
+    end
+        local direction = Vector(0, 4, 12)
+    direction:rotateOver("y", my_rot.y)
+    -- forward = forward*2
+    Player[color].setHandTransform({
+        position = self.getPosition()+direction,
+        rotation = {0, my_rot.y+180, 0},
+        scale = {8, 6, 4}
+    })
+end
+
+
+function create_UI()
+    local assets = {
+        {
+            name="header-background",
+            url="https://steamusercontent-a.akamaihd.net/ugc/15322387358850585584/636A92EF6D233D7B31DC6A7F2C3FF5DDA6BF74BF/"
+        },
+    }
+    local toggles = {}
+    local total_toggles = 50
+    local table_layouts = {}
+    ALL_VILLAINS = {}
+    for section, villains in pairs(EVERYTHING) do
+        if section ~= "Official" then
+            local tmp = {tag="ToggleButton", attributes={class="section-button", text=section, id=section}}
+
+            total_toggles = total_toggles + 50
+            table.insert(table_layouts, {tag="TableLayout", attributes={class="villains", id=section.." Villains", active=false}, children={}})
+            local this_villains={}
+            for villain, info in pairs(villains) do
+                table.insert(this_villains, {villain, info.tooltip})
+                table.insert(ALL_VILLAINS, {section, villain})
+                table.insert(assets, {name=villain, url=info.image})
+            end
+            local table_layout = {}
+            for y=1, 4 do
+                local row = {tag="Row", children={}}
+                for x=1, 6 do
+                    local cell = {}
+                    if #this_villains > 0 then
+                        local vil = table.remove(this_villains, 1)
+                        cell = {tag="Cell", children={
+                            {tag="Button", attributes={id=vil[1], section=section, class="villain-button", image=vil[1]}},
+                            {tag="text", attributes={class="Villain-tooltip", text=vil[2]}},
+                        }}
+                    else
+                        cell = {tag="Cell"}
+                    end
+                    table.insert(row.children, cell)
+                end
+                table.insert(table_layout, row)
+            end
+            table_layouts[#table_layouts].children = table_layout
+        end
+    end
+    table_layouts[1].attributes.active=true
+
+    table.insert(toggles, {tag="Button",
+    attributes={
+        text="Random Pirate",
+        id="Random",
+        onClick="random_villain",
+
+        image="header-background",
+        textAlignment="MiddleCenter",
+        padding="2 2 3 3",
+        resizeTextForBestFit=true,
+        textColor="Clear",
+		colors="#FFFFFF|#B6B6B6|#CCCCCC|#888888"}})
+
+    local ui ={
+        {tag="Defaults", children={
+            {tag="Button", attributes={
+                                    class="villain-button",
+                                    preserveAspect=true,
+                                    onClick="select_villain",
+                                    preferredHeight=0,
+                                    ignoreLayout=True,
+									colors="#FFFFFF|#D6D6D6|#CCCCCC|#888888"}},
+            {tag="Text", attributes={
+                                    class="Villain-tooltip",
+                                    color="Clear",
+                                    rectAlignment="LowerCenter",
+                                    height="30%",
+                                    ignoreLayout=true,
+                                    fontSize=20,
+                                    resizeTextForBestFit=true}},
+            {tag="TableLayout", attributes={
+                                    class="villains",
+                                    position="0 26 -3",
+                                    scale=".25 .25 .25",
+                                    Rotation="0 0 180",
+                                    width=805,
+                                    height=570,
+                                    cellSpacing=8,
+                                    cellBackgroundColor="Clear"}},
+        }},
+
+        {tag="ToggleGroup", attributes={id="sections"}, children={
+            {tag="VerticalLayout", attributes={Rotation="180 180 0", position="82 -65.5 -7", width=150, height=150, scale=".25 .25 .25", spacing=10}, children=toggles}
+        }},
+    }
+    for _, layout in ipairs(table_layouts) do
+        table.insert(ui, layout)
+    end
+    self.UI.setCustomAssets(assets)
+    Wait.frames(||self.UI.setXmlTable(ui), 10)
+end
+
+function onLoad()
+    log("Setting everything on "..self.guid)
+    EVERYTHING = find_object_by_name("The keeper of information").getTable('EVERYTHING')
+    create_UI()
+end
+
+function find_object_by_name(name)
+    for _, obj in ipairs(getAllObjects()) do
+        if obj.getName() == name then return obj end
+    end
+    return nil
+end
+
+----#include villainous/customselectorv1
