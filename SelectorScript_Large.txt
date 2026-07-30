@@ -131,7 +131,7 @@ function create_UI()
                                     onClick="select_villain",
                                     preferredHeight=0,
                                     ignoreLayout=True,
-									colors="#FFFFFF|#D6D6D6|#CCCCCC|#888888"}},
+									colors="#FFEB8A|#FFFFFF|#CCCCCC|#888888"}},
             {tag="Text", attributes={
                                     class="Villain-tooltip",
                                     color="Clear",
