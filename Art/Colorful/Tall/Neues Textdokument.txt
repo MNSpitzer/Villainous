@@ -1,0 +1,307 @@
+local music_events
+local selected_music_event_index
+
+config = {
+    colours = {
+        WHITE        = {255/255, 231/255, 88/255},
+        DARK         = {38/255, 38/255, 38/255},
+        PURPLE       = {38/255, 38/255, 38/255},
+        LIGHT_PURPLE = {149/255, 104/255, 255/255},
+        GREEN        = {44/255, 100/255, 44/255},
+        RED          = {250/255, 100/255, 100/255}
+    },
+}
+
+local playlistMarker = ""
+local cartridgeSlotCheck = false
+
+local SLOT_RADIUS = 0.5
+
+-- IMPORTANT: empty playlist must be an empty list (NOT a clip with empty url)
+local emptyPlaylist = {}
+
+function dummy_button() end
+
+local function shuffle_in_place(t)
+    for i = #t, 2, -1 do
+        local j = math.random(i)
+        t[i], t[j] = t[j], t[i]
+    end
+end
+
+local function build_combined_playlist_from_cartridges(activeCartridges)
+    local combined = {}
+    local markerNames = {}
+
+    for _, r in ipairs(activeCartridges) do
+        table.insert(markerNames, r.getName())
+
+        local pl = r.getVar("playlist")
+        if type(pl) == "table" then
+            for i = 1, #pl do
+                local entry = pl[i]
+                if type(entry) == "table" then
+                    local url = entry.url
+                    if type(url) == "string" and url ~= "" then
+                        -- clone into a fresh table owned by THIS script (prevents cross-script resource issues)
+                        combined[#combined + 1] = {
+                            title = (type(entry.title) == "string" and entry.title) or r.getName(),
+                            url   = url
+                        }
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(markerNames)
+    local marker = table.concat(markerNames, "|")
+
+    return combined, marker
+end
+
+function getPlaylists()
+    coroutine.yield(0)
+    startLuaCoroutine(self, "getPlaylists_Couroutine")
+    return 1
+end
+
+function getPlaylists_Couroutine()
+    coroutine.yield(0)
+
+    local Cartridges    = getObjectsWithTag("Music Cartridge")
+    local cartridgeSlots = {
+        self.getPosition() + Vector(0, 0.2, 1.6),
+        self.getPosition() + Vector(-2.5, 0.2, 1.6),
+        self.getPosition() + Vector( 2.5, 0.2, 1.6),
+     
+    }
+    -- Collect all cartridges within a small radius of the slot
+    local activeCartridges = {}
+    if Cartridges ~= nil and #Cartridges > 0 then
+        for _, r in ipairs(Cartridges) do
+            local pos = r.getPosition()
+            for _, slot in ipairs(cartridgeSlots) do
+                local dist = (pos - slot):magnitude()
+                if dist < SLOT_RADIUS then
+                    activeCartridges[#activeCartridges + 1] = r
+                end
+            end
+        end
+    end
+
+    if #activeCartridges > 0 then
+        local combinedPlaylist, newMarker = build_combined_playlist_from_cartridges(activeCartridges)
+
+        if #combinedPlaylist > 0 then
+            if playlistMarker ~= newMarker then
+                playlistMarker = newMarker
+
+                shuffle_in_place(combinedPlaylist)
+
+                -- Set playlist only with valid (non-empty url) entries
+                MusicPlayer:setPlaylist(combinedPlaylist)
+
+                -- Keep your UI shuffle button as a separate feature (don’t rely on MusicPlayer.shuffle here)
+                MusicPlayer.shuffle = false
+
+                -- Use whichever index field your object expects; original script used playlistIndex
+                MusicPlayer.playlistIndex = 0
+                MusicPlayer:skipForward()
+            end
+
+            cartridgeSlotCheck = true
+        else
+            -- Cartridges present, but none had usable URLs
+            cartridgeSlotCheck = false
+            playlistMarker = ""
+            MusicPlayer:pause()
+            MusicPlayer:setPlaylist(emptyPlaylist)
+        end
+    else
+        cartridgeSlotCheck = false
+        playlistMarker = ""
+        MusicPlayer:pause()
+        MusicPlayer:setPlaylist(emptyPlaylist)
+    end
+
+    update_panel()
+    startLuaCoroutine(self, "getPlaylists")
+    return 1
+end
+
+function onLoad()
+    playlistMarker     = ""
+    cartridgeSlotCheck = false
+
+    math.randomseed(os.time())
+
+    startLuaCoroutine(self, "getPlaylists")
+
+    local text_params = {
+        click_function = "dummy_button",
+        function_owner = self,
+        position       = {0, 0.2, 0},
+        scale          = {0.5, 1, 0.5},
+        width          = 0,
+        height         = 0,
+        font_size      = 100,
+        font_color     = config.colours.WHITE
+    }
+    self:createButton(text_params)
+
+    local button_params = {
+        click_function = "dummy_button",
+        function_owner = self,
+        position       = {0, 0.2, 0},
+        scale          = {0.5, 1, 0.5},
+        width          = 150,
+        height         = 150,
+        font_size      = 300,
+        color          = config.colours.PURPLE,
+        font_color     = config.colours.WHITE
+    }
+
+    for i = 1, 5 do
+        self:createButton(button_params)
+    end
+
+    self:editButton({index=1, click_function="toggle_shuffle", position={-1,   0.2, 0.55}, tooltip="Shuffle"})
+    self:editButton({index=2, click_function="back_button",    position={-0.5, 0.2, 0.55}, width=300, height=300})
+    self:editButton({index=3, click_function="play_button",    text="▶",       position={0,   0.2, 0.55}, width=500, height=500})
+    self:editButton({index=4, click_function="forward_button", position={0.5, 0.2, 0.55}, width=300, height=300})
+    self:editButton({index=5, click_function="toggle_repeat",  position={1,   0.2, 0.55}, tooltip="Repeat"})
+
+    self:createButton(text_params)
+    self:editButton({index=6, position={0, 0.2, 0.915}})
+
+    update_panel()
+end
+
+--
+-- Controls
+--
+
+function toggle_shuffle()
+    MusicPlayer.shuffle = not MusicPlayer.shuffle
+    update_panel()
+end
+
+function back_button()
+    if MusicPlayer.playlistIndex ~= nil and MusicPlayer.playlistIndex > 0 then
+        MusicPlayer:skipBack()
+    elseif MusicPlayer.playlist_index ~= nil and MusicPlayer.playlist_index > 0 then
+        MusicPlayer:skipBack()
+    end
+    update_panel()
+end
+
+function play_button()
+    if MusicPlayer.player_status ~= "Play" then
+        MusicPlayer:play()
+    else
+        MusicPlayer:pause()
+    end
+    update_panel()
+end
+
+function forward_button()
+    MusicPlayer:skipForward()
+    update_panel()
+end
+
+function toggle_repeat()
+    MusicPlayer.repeat_track = not MusicPlayer.repeat_track
+    update_panel()
+end
+
+--
+-- Panel
+--
+
+function update_panel()
+    if cartridgeSlotCheck == false then
+        MusicPlayer:pause()
+        MusicPlayer:setPlaylist(emptyPlaylist)
+    end
+
+    startLuaCoroutine(self, "update_panel_coroutine")
+end
+
+function update_panel_coroutine()
+    for i = 0, 10 do
+        coroutine.yield(0)
+    end
+
+    -- Now Playing Text
+    local now_playing_label
+    if cartridgeSlotCheck == false then
+        now_playing_label = "Paused - Please add a cartridge!"
+    else
+        local clip = (MusicPlayer.getCurrentAudioclip and MusicPlayer.getCurrentAudioclip()) or nil
+        if clip ~= nil and clip.title ~= nil then
+            now_playing_label = clip.title
+        else
+            now_playing_label = "Not Playing"
+        end
+    end
+    self:editButton({index=0, label=now_playing_label})
+
+    -- Shuffle Button
+    local shuffle_button_colour = MusicPlayer.shuffle and config.colours.GREEN or config.colours.PURPLE
+    self:editButton({index=1, color=shuffle_button_colour})
+
+    -- Back Button
+    local back_button_label, back_button_tooltip
+    local idx = MusicPlayer.playlistIndex or MusicPlayer.playlist_index or 0
+    if not is_music_event_playing() and idx > 0 then
+        back_button_label = "«"
+        back_button_tooltip = "Back"
+    else
+        back_button_label = "···"
+        back_button_tooltip = nil
+    end
+    self:editButton({index=2, label=back_button_label, tooltip=back_button_tooltip})
+
+    -- Play/Pause Button
+    local play_button_label, play_button_font_size, play_button_colour, play_button_tooltip
+    if MusicPlayer.player_status == "Pause" then
+        play_button_label     = "▶"
+        play_button_font_size = 300
+        play_button_colour    = config.colours.PURPLE
+        play_button_tooltip   = "Play"
+    else
+        play_button_label     = "▐ ▌"
+        play_button_font_size = 200
+        play_button_colour    = config.colours.GREEN
+        play_button_tooltip   = "Pause"
+    end
+    self:editButton({
+        index     = 3,
+        label     = play_button_label,
+        font_size = play_button_font_size,
+        color     = play_button_colour,
+        tooltip   = play_button_tooltip
+    })
+
+    -- Forward Button
+    local forward_button_label, forward_button_tooltip
+    if not is_music_event_playing() then
+        forward_button_label = "»"
+        forward_button_tooltip = "Skip"
+    else
+        forward_button_label = "···"
+        forward_button_tooltip = nil
+    end
+    self:editButton({index=4, label=forward_button_label, tooltip=forward_button_tooltip})
+
+    -- Repeat Button
+    local repeat_button_colour = MusicPlayer.repeat_track and config.colours.GREEN or config.colours.PURPLE
+    self:editButton({index=5, color=repeat_button_colour})
+
+    return 1
+end
+
+function is_music_event_playing()
+    return selected_music_event_index ~= nil
+end

@@ -1,4 +1,8 @@
 ----#include villainous/customselectorv1
+local TILT_ANGLES = {-2.5, 1, -0.5, 2.8, -2.5, .6, 0, 2.2, -0.5, -1.1, 2.3, -1}
+local OFFSETS = {"1 -1", "-2 1", "1 2", "-1 -2", "2 1", "-1 1", "1 -2", "-2 -1", "2 -1", "-1 2", "-2 2", "1 1"}
+local tilt_index = 0
+
 function change_section(player, value, id)
     self.UI.setAttribute(id.." Villains", "active", value)
 end
@@ -90,12 +94,16 @@ function create_UI()
             local table_layout = {}
             for y=1, 4 do
                 local row = {tag="Row", children={}}
-                for x=1, 6 do
+                for x=1, 7 do
                     local cell = {}
+					
                     if #this_villains > 0 then
                         local vil = table.remove(this_villains, 1)
+						local angle = TILT_ANGLES[(tilt_index % #TILT_ANGLES) + 1]
+						local offset = OFFSETS[(tilt_index % #OFFSETS) + 1]
+						tilt_index = tilt_index + 1
                         cell = {tag="Cell", children={
-                            {tag="Button", attributes={id=vil[1], section=section, class="villain-button", image=vil[1]}},
+                            {tag="Button", attributes={id=vil[1], section=section, class="villain-button", image=vil[1], rotation="0 0 "..angle, offsetXY=offset}},
                             {tag="text", attributes={class="Villain-tooltip", text=vil[2]}},
                         }}
                     else
@@ -130,7 +138,7 @@ function create_UI()
                                     preserveAspect=true,
                                     onClick="select_villain",
                                     preferredHeight=0,
-                                    ignoreLayout=True,
+                                    ignoreLayout=true,
 									colors="#FFFFFF|#CCCCCC|#CCCCCC|#888888"}},
             {tag="Text", attributes={
                                     class="Villain-tooltip",
