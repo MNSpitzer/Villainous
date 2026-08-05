@@ -121,7 +121,7 @@ function create_UI()
         padding="2 2 3 3",
         resizeTextForBestFit=true,
         textColor="Clear",
-		colors="#FFFFFF|#B6B6B6|#CCCCCC|#888888"}})
+		colors="#FFFFFF|#CCCCCC|#CCCCCC|#888888"}})
 
     local ui ={
         {tag="Defaults", children={
@@ -131,7 +131,7 @@ function create_UI()
                                     onClick="select_villain",
                                     preferredHeight=0,
                                     ignoreLayout=True,
-									colors="#FFEB8A|#FFFFFF|#CCCCCC|#888888"}},
+									colors="#FFFFFF|#CCCCCC|#CCCCCC|#888888"}},
             {tag="Text", attributes={
                                     class="Villain-tooltip",
                                     color="Clear",
