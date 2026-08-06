@@ -69,6 +69,31 @@ end
 
 
 function create_UI()
+	local COLUMNS = 7
+    local ROWS = 4
+    local CELL_SPACING = 7
+	local IMAGE_ASPECT = 912/1215
+    local CELL_HEIGHT = 141
+	local MAX_TABLE_WIDTH = 790
+	local MAX_TABLE_HEIGHT = 620
+	
+	local cellW_fromWidth = (MAX_TABLE_WIDTH - (COLUMNS - 1) * CELL_SPACING) / COLUMNS
+    local cellH_fromWidth = cellW_fromWidth / IMAGE_ASPECT
+
+    local cellH_fromHeight = (MAX_TABLE_HEIGHT - (ROWS - 1) * CELL_SPACING) / ROWS
+    local cellW_fromHeight = cellH_fromHeight * IMAGE_ASPECT
+	
+	local CELL_WIDTH, CELL_HEIGHT
+    if cellH_fromWidth <= cellH_fromHeight then
+        CELL_WIDTH, CELL_HEIGHT = cellW_fromWidth, cellH_fromWidth
+    else
+        CELL_WIDTH, CELL_HEIGHT = cellW_fromHeight, cellH_fromHeight
+    end
+
+    local TABLE_WIDTH = COLUMNS * CELL_WIDTH + (COLUMNS - 1) * CELL_SPACING
+    local TABLE_HEIGHT = ROWS * CELL_HEIGHT + (ROWS - 1) * CELL_SPACING
+
+
     local assets = {
         {
             name="header-background",
@@ -92,9 +117,9 @@ function create_UI()
                 table.insert(assets, {name=villain, url=info.image})
             end
             local table_layout = {}
-            for y=1, 4 do
+            for y=1, ROWS do
                 local row = {tag="Row", children={}}
-                for x=1, 7 do
+                for x=1, COLUMNS do
                     local cell = {}
 					
                     if #this_villains > 0 then
@@ -103,7 +128,7 @@ function create_UI()
 						local offset = OFFSETS[(tilt_index % #OFFSETS) + 1]
 						tilt_index = tilt_index + 1
                         cell = {tag="Cell", children={
-                            {tag="Button", attributes={id=vil[1], section=section, class="villain-button", image=vil[1], rotation="0 0 "..angle, offsetXY=offset}},
+                            {tag="Button", attributes={id=vil[1], section=section, class="villain-button", padding="0 2 0 2", image=vil[1], rotation="0 0 "..angle, offsetXY=offset}},
                             {tag="text", attributes={class="Villain-tooltip", text=vil[2]}},
                         }}
                     else
@@ -137,8 +162,8 @@ function create_UI()
                                     class="villain-button",
                                     preserveAspect=true,
                                     onClick="select_villain",
-                                    preferredHeight=0,
-                                    ignoreLayout=true,
+									preferredHeight=0,
+									rectAlignment="MiddleCenter",
 									colors="#FFFFFF|#CCCCCC|#CCCCCC|#888888"}},
             {tag="Text", attributes={
                                     class="Villain-tooltip",
@@ -150,12 +175,12 @@ function create_UI()
                                     resizeTextForBestFit=true}},
             {tag="TableLayout", attributes={
                                     class="villains",
-                                    position="0 26 -3",
+                                    position="0 28 -3",
                                     scale=".25 .25 .25",
                                     Rotation="0 0 180",
-                                    width=805,
-                                    height=570,
-                                    cellSpacing=8,
+                                    width=TABLE_WIDTH,
+                                    height=TABLE_HEIGHT,
+                                    cellSpacing=CELL_SPACING,
                                     cellBackgroundColor="Clear"}},
         }},
 
