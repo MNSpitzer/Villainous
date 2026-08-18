@@ -1,0 +1,34 @@
+playlist = {
+  {
+    title = "The Secret Of Monkey Island Theme",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/2467486908572128444/7D3A7DEF4E8F69307D57DC74070E1A30DEE0C485/"
+  },
+  {
+    title = "The Scumm Bar",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/10377879242977714677/0A2444955AEAE28E47447FB0DC01EF5EDBA317D4/"
+  },
+  {
+    title = "LeChuck's Theme",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/17705922485298716975/0A0274D8791F057A82095A158B2E15B6D2C2278F/"
+  },
+  {
+    title = "LeChuck's Revenge",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/2450601024151933531/1628006FB792AA2A14A87E13B4C1DED5F83742FE/"
+  },
+  {
+    title = "Wally Cries",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/12434384044384150108/BB56389D9FF3B67693CC10EFE42C39171DD7EDB6/"
+  },  
+  {
+    title = "A Pirate I Was Meant to be",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/13958633499314749922/0CA71A0EAF98313DF616A3E40C8DE2246AA1201D/"
+  },
+{
+    title = "Rollercoaster of Death",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/11989312284319874564/88BB2DCB4AA00E10A857806E272FF6988DEA020A/"
+  },
+  {
+    title = "LeChuck - Sea of Thieves",
+    url = "https://steamusercontent-a.akamaihd.net/ugc/16910016911130749740/0E38F54B7BBBE53DADD684ED4C203C2478ADF570/"
+  },
+}
