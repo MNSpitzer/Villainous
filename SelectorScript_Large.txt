@@ -71,10 +71,10 @@ end
 function create_UI()
 	local COLUMNS = 7
     local ROWS = 4
-    local CELL_SPACING = 7
+    local CELL_SPACING = 9
 	local IMAGE_ASPECT = 912/1215
     local CELL_HEIGHT = 141
-	local MAX_TABLE_WIDTH = 790
+	local MAX_TABLE_WIDTH = 805
 	local MAX_TABLE_HEIGHT = 620
 	
 	local cellW_fromWidth = (MAX_TABLE_WIDTH - (COLUMNS - 1) * CELL_SPACING) / COLUMNS
